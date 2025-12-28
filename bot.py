@@ -16,7 +16,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         # Correct Gemini API endpoint
         response = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={GEMINI_API_KEY}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}",
             headers={"Content-Type": "application/json"},
             json={
                 "contents": [
@@ -29,9 +29,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             }
         )
         data = response.json()
-        ai_reply = data["candidates"][0]["content"]["parts"][0]["text"]
+        
+        # Check if response is valid
+        if "candidates" in data and len(data["candidates"]) > 0:
+            ai_reply = data["candidates"][0]["content"]["parts"][0]["text"]
+        elif "error" in data:
+            ai_reply = f"API Error: {data['error'].get('message', 'Unknown error')}"
+        else:
+            ai_reply = f"Unexpected response format: {data}"
+            
+    except requests.exceptions.RequestException as e:
+        ai_reply = f"Network error: {str(e)}"
+    except KeyError as e:
+        ai_reply = f"Response parsing error: Missing key {str(e)}"
     except Exception as e:
-        ai_reply = f"Sorry, I couldn't get a response from AI. Error: {str(e)}"
+        ai_reply = f"Unexpected error: {str(e)}"
 
     await update.message.reply_text(ai_reply)
 
