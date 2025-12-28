@@ -14,9 +14,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
     try:
-        # Free tier Gemini API endpoint
+        # Updated Gemini API endpoint for free tier
         response = requests.post(
-            f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={GEMINI_API_KEY}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}",
             headers={"Content-Type": "application/json"},
             json={
                 "contents": [
@@ -26,18 +26,26 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         ]
                     }
                 ]
-            }
+            },
+            timeout=30
         )
-        data = response.json()
         
-        # Check if response is valid
-        if "candidates" in data and len(data["candidates"]) > 0:
-            ai_reply = data["candidates"][0]["content"]["parts"][0]["text"]
-        elif "error" in data:
-            ai_reply = f"API Error: {data['error'].get('message', 'Unknown error')}"
+        # Check HTTP status
+        if response.status_code != 200:
+            ai_reply = f"API Error (Status {response.status_code}): {response.text}"
         else:
-            ai_reply = f"Unexpected response format: {data}"
+            data = response.json()
             
+            # Check if response is valid
+            if "candidates" in data and len(data["candidates"]) > 0:
+                ai_reply = data["candidates"][0]["content"]["parts"][0]["text"]
+            elif "error" in data:
+                ai_reply = f"API Error: {data['error'].get('message', 'Unknown error')}"
+            else:
+                ai_reply = f"Unexpected response: {data}"
+                
+    except requests.exceptions.Timeout:
+        ai_reply = "Request timed out. Please try again."
     except requests.exceptions.RequestException as e:
         ai_reply = f"Network error: {str(e)}"
     except KeyError as e:
