@@ -3,53 +3,48 @@ import requests
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 
-# ==== CONFIGURE KEYS FROM ENVIRONMENT ====
-TELEGRAM_TOKEN = "8590602701:AAGDf0QKrZq3RgKbE1PSNuF_wSohCIM1igQ"
-GEMINI_API_KEY = "AIzaSyBIrtiBy5Mfua0R_5jxW1PQZWXjR09uXZM"
+# ==== CONFIGURE KEYS ====
+TELEGRAM_TOKEN = os.environ.get("8590602701:AAGDf0QKrZq3RgKbE1PSNuF_wSohCIM1igQ")
+GEMINI_API_KEY = os.environ.get("AIzaSyBIrtiBy5Mfua0R_5jxW1PQZWXjR09uXZM")
+
+# Free tier model
+MODEL_NAME = "models/text-bison-001"
 
 # ==== FUNCTIONS ====
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Hello! I'm your AI chatbot powered by Gemini. Type anything!")
+    await update.message.reply_text(
+        "Hello! I'm your AI chatbot powered by Google's Text-Bison model. Type anything!"
+    )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
+    ai_reply = "Sorry, I couldn't get a response from AI."
+
     try:
-        # Updated Gemini API endpoint for free tier
         response = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}",
+            f"https://generativelanguage.googleapis.com/v1/{MODEL_NAME}:generateText?key={GEMINI_API_KEY}",
             headers={"Content-Type": "application/json"},
             json={
-                "contents": [
-                    {
-                        "parts": [
-                            {"text": user_message}
-                        ]
-                    }
-                ]
+                "prompt": user_message,
+                "temperature": 0.7,
+                "candidate_count": 1,
+                "max_output_tokens": 256
             },
             timeout=30
         )
-        
-        # Check HTTP status
-        if response.status_code != 200:
-            ai_reply = f"API Error (Status {response.status_code}): {response.text}"
+        data = response.json()
+
+        if "candidates" in data and len(data["candidates"]) > 0:
+            ai_reply = data["candidates"][0]["output"]
+        elif "error" in data:
+            ai_reply = f"API Error: {data['error'].get('message', 'Unknown error')}"
         else:
-            data = response.json()
-            
-            # Check if response is valid
-            if "candidates" in data and len(data["candidates"]) > 0:
-                ai_reply = data["candidates"][0]["content"]["parts"][0]["text"]
-            elif "error" in data:
-                ai_reply = f"API Error: {data['error'].get('message', 'Unknown error')}"
-            else:
-                ai_reply = f"Unexpected response: {data}"
-                
+            ai_reply = f"Unexpected response: {data}"
+
     except requests.exceptions.Timeout:
         ai_reply = "Request timed out. Please try again."
     except requests.exceptions.RequestException as e:
         ai_reply = f"Network error: {str(e)}"
-    except KeyError as e:
-        ai_reply = f"Response parsing error: Missing key {str(e)}"
     except Exception as e:
         ai_reply = f"Unexpected error: {str(e)}"
 
@@ -59,5 +54,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
 print("Bot is running...")
 app.run_polling()
