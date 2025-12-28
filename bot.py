@@ -5,7 +5,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, Messa
 
 # ==== CONFIGURE KEYS FROM ENVIRONMENT ====
 TELEGRAM_TOKEN = os.environ.get("8590602701:AAGDf0QKrZq3RgKbE1PSNuF_wSohCIM1igQ")
-GEMINI_API_KEY = os.environ.get("AIzaSyDy3nTs68uMdlS-g5of5HQoxEZ4fu0LGVY")
+GEMINI_API_KEY = os.environ.get("AIzaSyBIrtiBy5Mfua0R_5jxW1PQZWXjR09uXZM")
 
 # Model for free-tier Google Generative API
 MODEL_NAME = "models/text-bison-001"
