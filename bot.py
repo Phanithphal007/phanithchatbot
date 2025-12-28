@@ -33,7 +33,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(ai_reply)
 
 # ==== MAIN ====
-app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+app = ApplicationBuilder().token(8590602701:AAGDf0QKrZq3RgKbE1PSNuF_wSohCIM1igQ).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
