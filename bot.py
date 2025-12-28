@@ -16,7 +16,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         response = requests.post(
             "https://api.openai.com/v1/chat/completions",
-            headers={"Authorization": f"Bearer {GEMINI_API_KEY}"},
+            headers={"Authorization": f"Bearer {AIzaSyDy3nTs68uMdlS-g5of5HQoxEZ4fu0LGVY}"},
             json={"model": "gemini-1.5", "messages": [{"role": "user", "content": user_message}]}
         )
         data = response.json()
@@ -27,7 +27,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(ai_reply)
 
 # ==== MAIN ====
-app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+app = ApplicationBuilder().token(8590602701:AAGDf0QKrZq3RgKbE1PSNuF_wSohCIM1igQ).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 print("Bot is running...")
